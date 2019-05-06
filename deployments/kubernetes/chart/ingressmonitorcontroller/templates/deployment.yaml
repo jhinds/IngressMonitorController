@@ -47,16 +47,27 @@ spec:
     spec:
       {{- if .Values.ingressMonitorController.tolerations }}
       tolerations:
-{{ toYaml .Values.ingressMonitorController.tolerations | indent 8 -}}
+{{ toYaml .Values.ingressMonitorController.tolerations | indent 8 }}
       {{- end }}
       containers:
       - env:
+      {{- range .Values.ingressMonitorController.secrets }}
+        - name: {{ .variable }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .name }}
+              key: {{ .key }}
+      {{- end }}
       {{- if .Values.ingressMonitorController.watchNamespace }}
         - name: KUBERNETES_NAMESPACE
           value: {{ .Values.ingressMonitorController.watchNamespace | quote }}
       {{- end }}
         - name: CONFIG_FILE_PATH
           value: {{ .Values.ingressMonitorController.configFilePath }}
+        - name: LOG_LEVEL
+          value: {{ .Values.ingressMonitorController.logLevel }}
+        - name: LOG_FORMAT
+          value: {{ .Values.ingressMonitorController.logFormat }}
         image: "{{ .Values.ingressMonitorController.image.name }}:{{ .Values.ingressMonitorController.image.tag }}"
         imagePullPolicy: {{ .Values.ingressMonitorController.image.pullPolicy }}
       {{- if .Values.ingressMonitorController.useFullName }}
@@ -66,13 +77,30 @@ spec:
       {{- end }}
         volumeMounts:
         - mountPath: /etc/IngressMonitorController
-          name: config-volume
+      {{- if .Values.ingressMonitorController.useFullName }}
+          name: {{ template "fullname" . }}-vol
+      {{- else }}
+          name: {{ template "name" . }}-vol
+      {{- end }}
       serviceAccountName: {{ template "serviceAccountName" . }}
       volumes:
-      - configMap:
-        {{- if .Values.ingressMonitorController.useFullName }}
-          name: {{ template "fullname" . }}
-        {{- else }}
-          name: {{ template "name" . }}
-        {{- end }}
-        name: config-volume
+      {{- if .Values.ingressMonitorController.useFullName }}
+        - name: {{ template "fullname" . }}-vol
+      {{- else }}
+        - name: {{ template "name" . }}-vol
+      {{- end }}
+      {{- if eq .Values.ingressMonitorController.mount "secret" }}
+          secret:
+          {{- if .Values.ingressMonitorController.useFullName }}
+            secretName: {{ template "fullname" . }}-secret
+          {{- else }}
+            secretName: {{ template "name" . }}-secret
+          {{- end }}
+      {{ else }}
+          configMap:
+          {{- if .Values.ingressMonitorController.useFullName }}
+            name: {{ template "fullname" . }}-config
+          {{- else }}
+            name: {{ template "name" . }}-config
+          {{- end }}
+      {{- end }}

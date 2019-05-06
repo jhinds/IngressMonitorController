@@ -15,18 +15,20 @@ type Config struct {
 }
 
 type Provider struct {
-	Name          string `yaml:"name"`
-	ApiKey        string `yaml:"apiKey"`
-	ApiURL        string `yaml:"apiURL"`
-	AlertContacts string `yaml:"alertContacts"`
-	Username      string `yaml:"username"`
-	Password      string `yaml:"password"`
+	Name              string `yaml:"name"`
+	ApiKey            string `yaml:"apiKey"`
+	ApiURL            string `yaml:"apiURL"`
+	AlertContacts     string `yaml:"alertContacts"`
+	AlertIntegrations string `yaml:"alertIntegrations"`
+	Username          string `yaml:"username"`
+	Password          string `yaml:"password"`
+	AccountEmail      string `yaml:"accountEmail"`
 }
 
 func ReadConfig(filePath string) Config {
 	var config Config
 	// Read YML
-	log.Println("Reading YAML Configuration")
+	log.Println("Reading YAML Configuration", filePath)
 	source, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Panic(err)
@@ -44,7 +46,7 @@ func ReadConfig(filePath string) Config {
 func GetControllerConfig() Config {
 	configFilePath := os.Getenv("CONFIG_FILE_PATH")
 	if len(configFilePath) == 0 {
-		configFilePath = "config.yaml"
+		configFilePath = "../../configs/testConfigs/test-config.yaml"
 	}
 
 	config := ReadConfig(configFilePath)

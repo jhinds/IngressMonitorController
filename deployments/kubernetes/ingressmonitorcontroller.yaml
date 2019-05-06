@@ -11,10 +11,10 @@ metadata:
     
   labels:
     app: ingressmonitorcontroller
-    chart: "ingressmonitorcontroller-v1.0.57"
+    chart: "ingressmonitorcontroller-v1.0.74"
     release: "RELEASE-NAME"
     heritage: "Tiller"
-    version: v1.0.57
+    version: v1.0.74
     
     group: com.stakater.platform
     provider: stakater
@@ -34,10 +34,10 @@ spec:
     metadata:
       labels:
         app: ingressmonitorcontroller
-        chart: "ingressmonitorcontroller-v1.0.57"
+        chart: "ingressmonitorcontroller-v1.0.74"
         release: "RELEASE-NAME"
         heritage: "Tiller"
-        version: v1.0.57
+        version: v1.0.74
         
         group: com.stakater.platform
         provider: stakater
@@ -47,17 +47,21 @@ spec:
       - env:
         - name: CONFIG_FILE_PATH
           value: /etc/IngressMonitorController/config.yaml
-        image: "stakater/ingressmonitorcontroller:v1.0.57"
+        - name: LOG_LEVEL
+          value: info
+        - name: LOG_FORMAT
+          value: text
+        image: "stakater/ingressmonitorcontroller:v1.0.74"
         imagePullPolicy: IfNotPresent
         name: ingressmonitorcontroller
         volumeMounts:
         - mountPath: /etc/IngressMonitorController
-          name: config-volume
+          name: ingressmonitorcontroller-vol
       serviceAccountName: ingressmonitorcontroller
       volumes:
-      - configMap:
-          name: ingressmonitorcontroller
-        name: config-volume
+        - name: ingressmonitorcontroller-vol
+          configMap:
+            name: ingressmonitorcontroller-config
 ---
 # Source: ingressmonitorcontroller/templates/clusterrole.yaml
 
@@ -93,61 +97,9 @@ rules:
 # Source: ingressmonitorcontroller/templates/rolebinding.yaml
 
 ---
-# Source: ingressmonitorcontroller/templates/rbac.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: ingressmonitorcontroller
-    version: 1.0.46
-    group: com.stakater.platform
-    provider: stakater
-    chart: "ingressmonitorcontroller-1.0.46"
-    release: "RELEASE-NAME"
-    heritage: "Tiller"
-  name: ingressmonitorcontroller
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: ingressmonitorcontroller-role
-rules:
-  - apiGroups:
-      - ""
-      - "extensions"
-      - "route.openshift.io"
-    resources:
-      - ingresses
-      - routes
-    verbs:
-      - list
-      - get
-      - update
-      - patch
-      - watch
-      - delete
-  - apiGroups:
-      - ""
-    resources:
-      - services
-      - pods
-    verbs:
-      - list
-      - get
-      - watch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: ingressmonitorcontroller-role-binding
-roleRef:
-  kind: ClusterRole
-  name: ingressmonitorcontroller-role
-  apiGroup: rbac.authorization.k8s.io
-subjects:
-- kind: ServiceAccount
-  name: ingressmonitorcontroller
-  namespace: default
+# Source: ingressmonitorcontroller/templates/secrets.yaml
+
+
 ---
 # Source: ingressmonitorcontroller/templates/clusterrolebinding.yaml
 
@@ -165,6 +117,7 @@ subjects:
   namespace: default
 ---
 # Source: ingressmonitorcontroller/templates/configmap.yaml
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -172,25 +125,21 @@ metadata:
   annotations:
   labels:
     app: ingressmonitorcontroller
-    chart: "ingressmonitorcontroller-v1.0.57"
+    chart: "ingressmonitorcontroller-v1.0.74"
     release: "RELEASE-NAME"
     heritage: "Tiller"
-    version: v1.0.57
+    version: v1.0.74
     
     group: com.stakater.platform
     provider: stakater
     
 data:
-  config.yaml: |-
-    providers:
-    - name: UptimeRobot
-      apiKey: your-api-key
-      apiURL: https://google.com
-      username: null
-      password: null
-      alertContacts: some-alert-contacts
-    enableMonitorDeletion: true
-    monitorNameTemplate: "{{.Namespace}}-{{.IngressName}}"
+  config.yaml: "providers:\n- name: UptimeRobot\n  apiKey: your-api-key\n  apiURL: https://google.com\n
+    \ alertContacts: some-alert-contacts\nsecrets: {}\n# - variable: environment-variable-name\t\n#
+    \  name: secret-name\n#   key: secret-key\nenableMonitorDeletion: true\nmonitorNameTemplate:
+    \"{{.Namespace}}-{{.IngressName}}\""
+  
+
 ---
 # Source: ingressmonitorcontroller/templates/serviceaccount.yaml
 
@@ -199,10 +148,10 @@ kind: ServiceAccount
 metadata:
   labels:
     app: ingressmonitorcontroller
-    chart: "ingressmonitorcontroller-v1.0.57"
+    chart: "ingressmonitorcontroller-v1.0.74"
     release: "RELEASE-NAME"
     heritage: "Tiller"
-    version: v1.0.57
+    version: v1.0.74
     
     group: com.stakater.platform
     provider: stakater
